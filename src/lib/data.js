@@ -1,0 +1,11 @@
+import { useEffect, useState } from 'react'
+const KEY = 'compass-incidents'
+export const statuses = ['received', 'assigned', 'in_progress', 'resolved']
+export const patrols = [{ id:'p1', name:'Patrol Alpha', lat:8.4864,lng:123.8028,status:'available' },{ id:'p2',name:'Patrol Bravo',lat:8.4829,lng:123.8091,status:'available' },{id:'p3',name:'Patrol Charlie',lat:8.4901,lng:123.8072,status:'unavailable'}]
+const seeded = [{id:'INC-1042',source:'app',type:'disturbance',description:'Loud altercation reported near the public market.',lat:8.4858,lng:123.8044,status:'received',reporter_name:'Mariel Santos',created_at:'2026-11-03T06:18:00.000Z',updated_at:'2026-11-03T06:18:00.000Z'}, {id:'INC-1041',source:'call',type:'suspicious activity',description:'Unattended motorcycle observed near the plaza.',lat:8.4834,lng:123.8007,status:'assigned',assigned_patrol_point_id:'p1',reporter_name:'Desk call',created_at:'2026-11-03T05:45:00.000Z',updated_at:'2026-11-03T05:54:00.000Z'}]
+export function getIncidents(){ try { return JSON.parse(localStorage.getItem(KEY)) || seeded } catch { return seeded } }
+export function saveIncidents(items){ localStorage.setItem(KEY, JSON.stringify(items)); window.dispatchEvent(new Event('compass-data')) }
+export function addIncident(values){ const item={...values,id:`INC-${Math.floor(1000+Math.random()*8999)}`,status:'received',created_at:new Date().toISOString(),updated_at:new Date().toISOString()}; saveIncidents([item,...getIncidents()]); return item }
+export function updateIncident(id, change){ const all=getIncidents().map(i=>i.id===id?{...i,...change,updated_at:new Date().toISOString()}:i); saveIncidents(all); return all.find(i=>i.id===id) }
+export function useIncidents(){ const [items,setItems]=useState(getIncidents()); useEffect(()=>{const refresh=()=>setItems(getIncidents());window.addEventListener('compass-data',refresh);return()=>window.removeEventListener('compass-data',refresh)},[]); return items }
+export function distance(a,b){ const rad=x=>x*Math.PI/180, R=6371, dLat=rad(b.lat-a.lat),dLng=rad(b.lng-a.lng);const q=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(q),Math.sqrt(1-q)) }
